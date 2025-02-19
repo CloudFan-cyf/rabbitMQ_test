@@ -29,7 +29,7 @@ func bodyFrom(args []string) string {
 func severityFrom(args []string) string {
 	var s string
 	if (len(args) < 2) || os.Args[1] == "" {
-		s = "info"
+		s = "anonyous.info"
 	} else {
 		s = os.Args[1]
 	}
@@ -49,14 +49,18 @@ func main() {
 
 	// Declare a Exchange, fanout exchange broadcasts all the messages it receives to all the queues it knows
 	// Direct exchange delivers messages to queues based on the message routing key
+	// Topic exchange delivers messages to queues based on the message routing key and a pattern that the queue defines
+	// routing key is a message attribute the exchange looks at when deciding how to route the message to queues, it is like an address for the message.Such as "stock.usd.nyse" or "nyse.vmw"
+	// * (star) can substitute for exactly one word.
+	// # (hash) can substitute for zero or more words.
 	err = ch.ExchangeDeclare(
-		"logs_direct", // name
-		"direct",      // type
-		true,          // durable
-		false,         // auto-deleted
-		false,         // internal
-		false,         // no-wait
-		nil,           // arguments
+		"logs_topic", // name
+		"topic",      // type
+		true,         // durable
+		false,        // auto-deleted
+		false,        // internal
+		false,        // no-wait
+		nil,          // arguments
 	)
 	failOnErr(err, "Failed to declare an exchange")
 
@@ -66,7 +70,7 @@ func main() {
 	body := bodyFrom(os.Args)
 	err = ch.PublishWithContext(
 		ctx,                   // context
-		"logs_direct",         // exchange
+		"logs_topic",          // exchange
 		severityFrom(os.Args), // routing key
 		false,                 // mandatory
 		false,                 // immediate
